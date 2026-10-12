@@ -176,14 +176,43 @@ https://gs-loc.apple.com/wloc-settings/save?lat=35.6586&lon=139.7454&acc=25
 ```bash
 cd worker
 npm ci
-npm run build:check
+```
+
+### 登录方式
+
+**方式 A：浏览器登录**
+
+```bash
 npx wrangler login
+```
+
+如果提示端口被占用（例如本地代理占用了 8976），可改用方式 B。
+
+**方式 B：API Token（推荐，无需占用本地端口）**
+
+1. 打开 [Cloudflare API Tokens](https://dash.cloudflare.com/profile/api-tokens)
+2. 创建 Token，选择 **Edit Cloudflare Workers** 模板
+3. 复制 Token 后，在终端设置（当前窗口有效）：
+
+```powershell
+$env:CLOUDFLARE_API_TOKEN="你的Token"
+```
+
+macOS / Linux：
+
+```bash
+export CLOUDFLARE_API_TOKEN="你的Token"
+```
+
+### 部署
+
+```bash
+npm run build:check
 npm run deploy
 ```
 
 - `npm ci`：按锁文件安装依赖  
-- `npm run build:check`：部署前检查  
-- `npx wrangler login`：首次需要登录 Cloudflare  
+- `npm run build:check`：部署前检查（如遇本地端口权限问题可跳过）  
 - `npm run deploy`：发布  
 
 部署不需要 KV 或数据库。完成后终端会输出你的页面地址，用 Safari 打开即可选点。
