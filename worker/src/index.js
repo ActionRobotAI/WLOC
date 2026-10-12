@@ -1,8 +1,14 @@
 import { Hono } from "hono/tiny";
 import { getPageHtml } from "./page.js";
-import { parseCoords, gcj02ToWgs84, round6 } from "./parse.js";
+import { parseCoords, gcj02ToWgs84, toWgs84, round6, inRange } from "./parse.js";
 
 const app = new Hono();
+
+// 解析请求可能包含位置；明确禁止浏览器和共享缓存存储 API 响应。
+app.use('/api/*', async (c, next) => {
+  c.header('Cache-Control', 'no-store');
+  await next();
+});
 
 app.get("/", (c) => {
   return c.html(getPageHtml());
@@ -18,8 +24,13 @@ app.get("/api/parse", async (c) => {
   const fmt = (c.req.query("format") || "").toLowerCase();
   try {
     let { lat, lon, name, src } = await parseCoords(raw);
-    const needConv = cs === "gcj" || (cs !== "none" && (src === "amap" || src === "apple"));
-    if (needConv) ({ lat, lon } = gcj02ToWgs84(lat, lon));
+    // 默认按来源自动换算; cs=none 强制不转换, cs=gcj/bd 强制按指定坐标系转换。
+    if (cs === "gcj") ({ lat, lon } = gcj02ToWgs84(lat, lon));
+    else if (cs === "bd") ({ lat, lon } = toWgs84(lat, lon, "baidu"));
+    else if (cs !== "none") ({ lat, lon } = toWgs84(lat, lon, src));
+    // 出口再校验一次: cs= 是调用方指定的, 强行按错误坐标系换算也可能把值推出值域。
+    // 宁可报错也不要返回一个能被当成坐标写进设备的数字。
+    if (!inRange(lat, lon)) throw new Error("解析出的坐标超出合法范围");
     lat = round6(lat);
     lon = round6(lon);
     name = name || "";
@@ -32,9 +43,10 @@ app.get("/api/parse", async (c) => {
   }
 });
 
+// 兜底 500 也要带 CORS —— 否则快捷指令那边看到的是跨域错误, 而不是真正的原因。
 app.onError((e, c) => {
-  console.error(`${e}`);
-  return c.text(`${e}`, 500);
+  c.header("Access-Control-Allow-Origin", "*");
+  return c.text(`${e && e.message ? e.message : e}`, 500);
 });
 
 export default app;

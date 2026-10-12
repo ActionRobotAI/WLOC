@@ -156,7 +156,7 @@ https://gs-loc.apple.com/wloc-settings/save?lat=35.6586&lon=139.7454&acc=25
 
 安装后，在地图中选点 → 分享 → 选择对应快捷指令。
 
-- [设置地理位置](https://www.icloud.com/shortcuts/a82717d8fdad4e6280866fcf911173f7)
+- [设置地理位置xepes0](https://www.icloud.com/shortcuts/0a6465168d554135b78008a8b4bd7c01)
 - [清理恢复位置](https://www.icloud.com/shortcuts/f42632d406504f24a2cd163af4fe012f)
 
 **Apple 地图**：选点 → 共享 → 选择快捷指令  
@@ -171,30 +171,22 @@ https://gs-loc.apple.com/wloc-settings/save?lat=35.6586&lon=139.7454&acc=25
 选点页面可以在地图上点选位置，或解析高德 / Apple 地图分享链接。  
 不部署也可以，直接用保存链接或快捷指令。
 
-### 一键部署
-
-打开下面链接，登录 Cloudflare 并授权：
-
-```text
-https://deploy.workers.cloudflare.com/?url=https://github.com/ActionRobotAI/WLOC/tree/main/worker
-```
-
-部署完成后会得到类似地址：
-
-```text
-https://你的项目名.你的子域名.workers.dev
-```
-
-### 手动部署
-
-需要已安装 Node.js：
+推荐自行部署。进入本仓库的 `worker` 目录，需要 Node.js 22 或更新版本。
 
 ```bash
 cd worker
-npm install
+npm ci
+npm run build:check
 npx wrangler login
 npm run deploy
 ```
+
+- `npm ci`：按锁文件安装依赖  
+- `npm run build:check`：部署前检查  
+- `npx wrangler login`：首次需要登录 Cloudflare  
+- `npm run deploy`：发布  
+
+部署不需要 KV 或数据库。完成后终端会输出你的页面地址，用 Safari 打开即可选点。
 
 ### 使用注意
 
